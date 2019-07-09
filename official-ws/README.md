@@ -1,20 +1,20 @@
-- YBMEX提供一个完整的pub/sub API with table diffing over WebSocket。 您可以订阅任何 [可用表 ](#subscriptions)上的实时更改。
+- YBMEX 提供 WebSocket Pub/Sub API ， 您可以订阅交易数据的实时更改。
 
   - 连接
-    - [所有指令](#所有指令)
-    - [订阅](#订阅)
+    - 所有指令
+    - 订阅
     - 验证
-      - [API 密钥](#API-密钥)
+      - API 密钥
   - 心跳
-    - [响应数据格式](#相应数据格式)
+  - 响应数据格式
 
-  ### [连接](#%E8%BF%9E%E6%8E%A5)
+  ### 连接
 
-  将您的 WebSocket客户端连接到wss://www.ybmex.com/realtime。
+  将您的 WebSocket 客户端连接到 wss://www.ybmex.com/realtime。
 
   通过发送 "help"，你可以基本了解如何使用我们的 WebSocket API 。
 
-  #### [所有指令](#%E6%89%80%E6%9C%89%E6%8C%87%E4%BB%A4)
+  #### 所有指令
 
   基本的命令发送的格式︰
 
@@ -22,24 +22,24 @@
   {"op": "<command>", "args": ["arg1", "arg2", "arg3"]}
   ```
 
-  在某些命令上, 参数 数组是可选的。 如果您只发送一个参数，则数组不是必需的。
+  在某些命令上，参数数组是可选的。 如果您只发送一个参数，则数组不是必需的。
 
   - 订阅：
-    - [subscribe](#Subscriptions)（订阅）
-    - [unsubscribe](#Subscriptions)（取消订阅）
-  - [身份验证（账户数据）](#API-Keys)︰
+    - subscribe（订阅）
+    - unsubscribe（取消订阅）
+  - 身份验证（账户数据）
   - 心跳
-    - [Ping](#heartbeats)
+    - Ping
 
-  > WebSocket 不支持新增和取消委托。 此功能请使用 [REST API](#)。 在使用时保持 HTTP 连接，请求/响应的往返时间将与 WebSocket 完全相同。
+  > WebSocket 不支持新增和取消委托。 此功能请使用 REST API。 在使用时保持 HTTP 连接，请求/响应的往返时间将与 WebSocket 完全相同。
 
-  #### [订阅](#%E8%AE%A2%E9%98%85)
+  #### 订阅
 
-  365MEX允许订阅实时数据。 一旦连接成功，该访问方方式没有频率限制，它是获取最新数据的最好的方法。
+  YBMEX 允许订阅实时数据。 一旦连接成功，该访问方方式没有频率限制，它是获取最新数据的最好方法。
 
   要订阅主题，请发送逗号分隔的主题列表。例如︰ 例如：
 
-   ws://192.168.1.22:9988/realtime?subscribe=instrument:XBTUSD,order:XBTUSD,orderBookL2:XBTUSD,trade:XBTUSD,liquidation:XBTUSD
+  wss://www.ybmex.com/realtime?subscribe=instrument:XBTUSD,order:XBTUSD,orderBookL2:XBTUSD,trade:XBTUSD,liquidation:XBTUSD
 
   如果您已连接，并且想要订阅一个新主题，请发送以下格式的请求︰
 
@@ -51,26 +51,24 @@
 
   ```
   "orderBookL2_25", // 前25层的Level2委托列表 
-  "orderBookL2", // 完整的level2委托列表 
-  "orderBook10", // 前10层的委托列表，用传统的完整委托列表推送 
-  "trade", // 实时交易，对应UI近期交易列表 
-  "instrument", // 产品更新，包括交易量以及报价 
-  "liquidation", // 进入委托列表的强平委托
+  "orderBookL2",    // 完整的level2委托列表 
+  "orderBook10",    // 前10层的委托列表，用传统的完整委托列表推送
+  "quote",          // 最高层的委托列表
+  "trade",          // 实时交易，对应UI近期交易列表 
+  "instrument",     // 产品更新，包括交易量以及报价 
+  "liquidation",    // 进入委托列表的强平委托
   ```
 
   下列主题要求进行身份验证︰
 
   ```
-  "margin", // 你账户的余额和保证金要求的更新 
-  "positon", // 你仓位的更新 
-  "execution", // 获取您账户所有的原始执行 
-  "transact", // 资金提存更新 
-  "wallet" // 比特币余额更新及总提款存款 
+  "margin",         // 你账户的余额和保证金要求的更新 
+  "positon",        // 你仓位的更新 
+  "execution",      // 获取您账户所有的原始执行 
+  "order",          // 资金提存更新 
   ```
 
-  如果您想获得实时委托列表数据，建议您使用 orderBookL2_25 订阅。 orderBook10 在任何数据变动时都推送完整的 10 个深度列表，这意味着更多的数据量。 orderBookL2 推送完整的 L2 委托列表，但 有效载荷可以变得非常大。 orderbookL2_25 提供完整 L2 委托列表的子集，但受到限制。 在未来，orderBook10 可能会降低推送频率，所以如果对延时有较高要求，请使用 orderBookL2。 对于大家可能提出的疑问，在 orderBookL2_25 或 orderBookL2 中的 id 字段是根据价格和合约符号计算的，因此对于任何价格，它是唯一的。 它应该被用于 update 和 delete 操作。
-
-  适用时，订阅时可以在主题后加冒号进行筛选。 例如，trade:XBTUSD 将只订阅 XBTUSD 的消息。
+  如果您想获得实时委托列表数据，建议您使用 orderBookL2_25 订阅。 orderBook10 在任何数据变动时都推送完整的 10 个深度列表，这意味着更多的数据量。 orderBookL2 推送完整的 L2 委托列表，但有效载荷可以变得非常大。 orderbookL2_25 提供完整 L2 委托列表的子集，但受到限制。 如果对延时有较高要求，请使用 orderBookL2。 对于大家可能提出的疑问，在 orderBookL2_25 或 orderBookL2 中的 id 字段是是唯一的，可以被用于 update 和 delete 操作。
 
   示例数据：
 
@@ -113,17 +111,17 @@
 
   您可以使用'取消订阅'操作。 格式与 "订阅" 相同。
 
-  #### [验证](#%E9%AA%8C%E8%AF%81)
+  #### 验证
 
-  许多数据流是公开的（见下文）。 如果您希望订阅用户锁定的流，则必须先进行身份验证。 请注意，无效身份验证将关闭连接。
+  许多数据流是公开的。 如果您希望订阅用户私有数据流，则必须先进行身份验证。 请注意，无效的身份验证将关闭连接。
 
-  ##### [API 密钥](#API-%E5%AF%86%E9%92%A5)
+  ##### API 密钥
 
-  365MEX API 的使用需要 API 密钥。
+  YBMEX API 的使用需要 API 密钥。
 
   永久的 API 密钥可以被锁定到某个 IP 地址的范围，撤消该密钥并不影响您的主要身份验证。他们也不需要更新。 他们也不需要续约。
 
-  若要使用 API 密钥身份验证，您必须 [生成一个 API 密钥](#)。
+  若要使用 API 密钥身份验证，您必须生成一个 API 密钥。
 
   若要使用 WebSocket API 密钥，您可以︰
 
@@ -139,11 +137,9 @@
   //签名是十六进制的 hex(HMAC_SHA256(secret, 'GET/realtime' + expires)) // expires 必须是一个数字，而不是一个字符串。 {"op": "authKeyExpires", "args": ["<APIKey>", <expires>, "<signature>"]}
   ```
 
-  ### [心跳](#%E5%BF%83%E8%B7%B3)
+  ### 心跳
 
-  某些 WebSocket 代码库比其它库能更好地检测连接断开。 如果你的 WebSocket 库支持 hybi-13 或 ping/pong，你可在任何时间发送 ping ，服务器就会返回pong。
-
-  由于浏览器的节能模式，我们不再支持通过 WebSocket API 的 ping 命令。
+  某些 WebSocket 代码库比其它库能更好地检测连接断开。 如果你的 WebSocket 库支持 ping/pong，你可在任何时间发送 ping ，服务器就会返回pong。
 
   如果你担心你的连接被默默地终止，我们推荐你采用以下流程：
 
@@ -152,7 +148,7 @@
   - 如果定时器被触发了（意味着30秒内没有收到新消息），发送一个 ping 数据帧（如果支持的话），或者发送字符串 'ping'。
   - 期待一个原始的pong框架或文字字符串'pong'作为回应。 如果在30秒内未收到，请发出错误或重新连接。
 
-  #### [响应数据格式](#%E5%93%8D%E5%BA%94%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F)
+  #### 响应数据格式
 
   WebSocket 的响应可能有以下三种类型：
 
