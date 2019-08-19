@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-$ pip install barvado
+$ pip install bravado
 ```
 
 ## Quickstart
